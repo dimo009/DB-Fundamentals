@@ -1,0 +1,290 @@
+--Exercise 1
+--Write a query that selects:
+--•	EmployeeId
+--•	JobTitle
+--•	AddressId
+--•	AddressText
+--Return the first 5 rows sorted by AddressId in ascending order.
+
+SELECT TOP(5) E.EmployeeID,E.JobTitle,A.AddressID,A.AddressText FROM Employees AS E
+INNER JOIN [dbo].[Addresses] AS A
+ON E.AddressID = A.AddressID
+ORDER BY A.AddressID
+
+--Exercise 2
+--Write a query that selects:
+--•	FirstName
+--•	LastName
+--•	Town
+--•	AddressText
+--Sorted by FirstName in ascending order then by LastName. Select first 50 employees.
+
+SELECT TOP(50) E.FirstName,E.LastName,T.Name, A.AddressText FROM Employees AS E
+INNER JOIN [dbo].[Addresses] AS A
+ON E.AddressID = A.AddressID
+INNER JOIN [dbo].[Towns] AS T
+ON A.TownID= T.TownID
+ORDER BY E.FirstName,E.LastName
+
+--Exercise 3
+--Write a query that selects:
+--•	EmployeeID
+--•	FirstName
+--•	LastName
+--•	DepartmentName
+--Sorted by EmployeeID in ascending order. Select only employees from “Sales” department.
+
+SELECT  E.EmployeeID,E.FirstName,E.LastName,D.Name FROM Employees AS E
+INNER JOIN [dbo].[Departments] AS D
+ON E.DepartmentID = D.DepartmentID
+WHERE D.Name = 'Sales'
+ORDER BY E.EmployeeID
+
+--EXERCISE 4
+--Write a query that selects:
+--•	EmployeeID
+--•	FirstName
+--•	Salary
+--•	DepartmentName
+--Filter only employees with salary higher than 15000. Return the first 5 rows sorted by DepartmentID in ascending order.
+
+SELECT TOP(5) E.EmployeeID,E.FirstName,E.Salary,D.Name FROM Employees AS E
+INNER JOIN [dbo].[Departments] AS D
+ON E.DepartmentID = D.DepartmentID
+WHERE E.Salary>15000
+ORDER BY D.DepartmentID
+
+--Exercise 5
+--Write a query that selects:
+--•	EmployeeID
+--•	FirstName
+--Filter only employees without a project. Return the first 3 rows sorted by EmployeeID in ascending order.
+
+SELECT TOP(3) E.EmployeeID,E.FirstName FROM Employees AS E
+WHERE E.EmployeeID NOT IN (SELECT EmployeeID FROM EmployeesProjects)
+ORDER BY E.EmployeeID
+
+--Exercise 6
+--Write a query that selects:
+--•	FirstName
+--•	LastName
+--•	HireDate
+--•	DeptName
+--Filter only employees with hired after 1/1/1999 and are from either "Sales" or "Finance" departments. 
+
+SELECT  E.FirstName,E.LastName,E.HireDate,D.Name FROM Employees AS E
+INNER JOIN [dbo].[Departments] AS D
+ON E.DepartmentID = D.DepartmentID
+WHERE E.HireDate>'1999-01-01'
+AND D.Name IN ('Sales','Finance')
+
+--Exercise 7
+--Write a query that selects:
+--•	EmployeeID
+--•	FirstName
+--•	ProjectName
+--Filter only employees with a project which has started after 13.08.2002 and it is still ongoing (no end date). 
+--Return the first 5 rows sorted by EmployeeID in ascending order.
+
+SELECT TOP(5) E.EmployeeID,E.FirstName, P.Name FROM Employees AS E
+INNER JOIN [dbo].[EmployeesProjects] AS EP
+ON E.EmployeeID = EP.EmployeeID
+INNER JOIN [dbo].[Projects] AS P
+ON EP.ProjectID=P.ProjectID
+WHERE P.StartDate >'2002-08-13'
+AND P.EndDate IS NULL
+ORDER BY E.EmployeeID
+
+--Exercise 8
+--Write a query that selects:
+--•	EmployeeID
+--•	FirstName
+--•	ProjectName
+--Filter all the projects of employee with id 24. If the project has started after 2005 the return value should be NULL.
+
+SELECT E.EmployeeID,E.FirstName,
+CASE
+WHEN P.StartDate > '2005-01-01' THEN NULL
+ELSE P.Name
+END AS [ProjectName]
+FROM Employees AS E
+INNER JOIN [dbo].[EmployeesProjects] AS EP
+ON E.EmployeeID = EP.EmployeeID
+INNER JOIN [dbo].[Projects] AS P
+ON EP.ProjectID=P.ProjectID
+WHERE E.EmployeeID = 24
+
+--Exercise 9
+--Write a query that selects: 
+--EmployeeID 
+--FirstName 
+--MangerID 
+--ManagerName 
+--Filter all employees with a manager who has ID equals to 3 or 7. Return the all rows sorted by EmployeeID in ascending order. 
+
+SELECT 
+	E1.EmployeeID, E1.FirstName, E1.ManagerID, E2.FirstName AS ManagerName
+FROM Employees e1
+INNER JOIN Employees AS E2
+ON E1.ManagerID = E2.EmployeeID
+WHERE E1.ManagerID IN (3, 7)
+ORDER BY E1.EmployeeID
+
+--Exercise 10
+
+--Write a query that selects: 
+--EmployeeID 
+--EmployeeName 
+--ManagerName 
+--DepartmentName 
+--Show first 50 employees with their managers and the departments which they are in (show the departments of the employees, not mangers ones). Order by EmployeeID. 
+
+SELECT TOP(50)
+	E1.EmployeeID, E1.FirstName + ' ' + E1.LastName AS EmployeeName, E2.FirstName + ' ' + E2.LastName AS ManagerName, E3.Name AS DepartmentName
+FROM Employees E1
+INNER JOIN Employees AS E2
+ON E1.ManagerID = E2.EmployeeID
+INNER JOIN Departments AS E3
+ON E1.DepartmentID=E3.DepartmentID
+ORDER BY E1.EmployeeID
+
+--Exercise 11 SUBQUERIES
+--Write a query that return the value of the lowest average salary of all departments.
+
+ SELECT MIN(A.AverageSalary) AS MinAverageSalary
+ FROM (
+       SELECT AVG(Salary) AS AverageSalary FROM [dbo].[Employees]
+	   GROUP BY DepartmentID
+	   ) AS A
+
+--Exercise 12
+--Write a query that selects: 
+--CountryCode 
+--MountainRange 
+--PeakName 
+--Elevation 
+--Filter all peaks in Bulgaria with elevation over 2835. Return the all rows sorted by elevation in descending order
+
+SELECT c.CountryCode,m.MountainRange,p.PeakName,p.Elevation FROM [dbo].[Countries] AS c
+INNER JOIN [dbo].[MountainsCountries] AS mc
+ON c.CountryCode=mc.CountryCode
+INNER JOIN [dbo].[Mountains] AS m
+ON m.Id=mc.MountainId
+INNER JOIN [dbo].[Peaks] As p
+ON p.MountainId=m.Id
+WHERE c.CountryCode = 'BG' 
+AND p.Elevation>2835
+ORDER BY p.Elevation DESC
+
+--Exercise 13
+
+--Write a query that selects: 
+--CountryCode 
+--MountainRanges 
+--Filter the count of the mountain ranges in the USA, Russia and Bulgaria. 
+
+SELECT c.CountryCode,COUNT(m.MountainRange) AS [MountainRanges] FROM [dbo].[Countries] AS c
+INNER JOIN [dbo].[MountainsCountries] AS mc
+ON c.CountryCode=mc.CountryCode
+INNER JOIN [dbo].[Mountains] AS m
+ON m.Id=mc.MountainId
+GROUP BY c.CountryCode
+HAVING c.CountryCode IN ('US','RU','BG')
+
+--Exercise 14
+--Write a query that selects: 
+--CountryName 
+--RiverName 
+--Find the first 5 countries with or without rivers in Africa. Sort them by CountryName in ascending order. 
+
+SELECT TOP(5) c.CountryName,r.RiverName FROM [dbo].[Countries] AS c
+INNER JOIN [dbo].[Continents] AS con
+ON c.ContinentCode=con.ContinentCode
+LEFT JOIN [dbo].[CountriesRivers] AS cs
+ON cs.CountryCode=c.CountryCode
+LEFT JOIN [dbo].[Rivers] as r
+ON r.Id = cs.RiverId
+WHERE con.ContinentName = 'Africa'
+ORDER BY c.CountryName
+
+--EXERCISE 15 COPIED
+
+SELECT c.ContinentCode, cc.CurrencyCode, 
+	   COUNT(cc.CountryCode) AS CurrencyUsage
+FROM Continents c
+JOIN Countries cc 
+ON c.ContinentCode = cc.ContinentCode 
+GROUP BY c.ContinentCode , cc.CurrencyCode
+HAVING COUNT(cc.CountryCode) = 
+	(SELECT MAX(xxx.CurrencyXX) 
+    FROM (SELECT cx.ContinentCode, ccx.CurrencyCode, 
+				COUNT(ccx.COUNTryCode) AS CurrencyXX
+			FROM Continents cx
+			JOIN Countries ccx 
+			ON cx.ContinentCode = ccx.ContinentCode 
+			WHERE c.ContinentCode = cx.ContinentCode 
+			GROUP BY cx.ContinentCode , ccx.CurrencyCode) AS xxx)
+AND COUNT(cc.CountryCode) > 1
+ORDER BY c.ContinentCode
+
+--Exercise 16 Countries without any mountains
+
+SELECT (SELECT COUNT(CountryCode) FROM Countries) -
+	(SELECT COUNT(cc.CountryCode) FROM
+	(SELECT CountryCode FROM MountainsCountries
+		GROUP BY CountryCode) AS cc)
+AS CountryCode
+
+--Exercise 17 Highest peak and longest River by Country
+--For each country, find the elevation of the highest peak and the length of the longest river, sorted by the highest peak elevation (from highest to lowest), 
+--then by the longest river length (from longest to smallest), then by country name (alphabetically). Display NULL when no data is available in some of the columns. 
+--Submit for evaluation the result grid with headers. Limit only the first 5 rows. 
+
+SELECT TOP(5) c.CountryName,MAX(p.Elevation) AS HighestPeakElevation,Max(r.Length) AS LongestRiverLength FROM [dbo].[Countries] AS c
+LEFT JOIN [dbo].[CountriesRivers] AS cs
+ON cs.CountryCode=c.CountryCode
+LEFT JOIN [dbo].[Rivers] as r
+ON r.Id = cs.RiverId
+INNER JOIN [dbo].[MountainsCountries] AS m
+ON c.CountryCode=m.CountryCode
+LEFT JOIN [dbo].[Peaks] AS p
+ON p.MountainId=m.MountainId
+GROUP BY c.CountryName
+ORDER BY HighestPeakElevation DESC,LongestRiverLength DESC
+
+--Exercise 18
+--For each country, find the name and elevation of the highest peak, along with its mountain. When no peaks are available in some country, display elevation 0, "(no highest peak)" as peak name 
+--and "(no mountain)" as mountain name. When multiple peaks in some country have the same elevation, display all of them. Sort the results by country name alphabetically, 
+--then by highest peak name alphabetically. Submit for evaluation the result grid with headers. Limit only the first 5 rows. 
+
+SELECT TOP(5)
+	    c.CountryName AS Country,
+		ISNULL(p.PeakName,'(no highest peak)') AS HighestPeakName,
+		ISNULL(MAX(p.Elevation),0) AS HighestPeakElevation,
+		ISNULL([MountainRange],'(no mountain)') AS Mountain
+		FROM [dbo].[Countries] AS c
+LEFT JOIN [dbo].[MountainsCountries] AS mc
+ON c.CountryCode=mc.CountryCode
+LEFT JOIN [dbo].[Peaks] AS p
+ON p.MountainId=mc.MountainId
+LEFT JOIN [dbo].[Mountains] as m
+ON m.Id=mc.MountainId
+GROUP BY c.CountryName,p.Elevation,p.PeakName,[MountainRange]
+ORDER BY c.CountryName,p.PeakName
+
+
+
+SELECT TOP 50
+	c.CountryName AS Country,
+	ISNULL(p.PeakName, '(no highest peak)') AS HighestPeakName,
+	ISNULL(MAX(p.Elevation), 0) AS HighestPeakElevation,
+	ISNULL(m.MountainRange, '(no mountain)') AS Mountain
+FROM Countries c
+LEFT JOIN MountainsCountries mc
+ON c.CountryCode = mc.CountryCode
+LEFT JOIN Peaks p
+ON mc.MountainId = p.MountainId
+LEFT JOIN Mountains m
+ON mc.MountainId = m.Id
+GROUP BY c.CountryName, p.Elevation, p.PeakName, m.MountainRange
+ORDER BY c.CountryName, p.PeakName
